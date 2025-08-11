@@ -2,6 +2,8 @@ package com.back
 
 fun main() {
     println("== 명언 앱 ==")
+    var lastid = 0
+
     while(true){
         print("명령) ")
         val input = readlnOrNull()!!.trim()
@@ -12,7 +14,8 @@ fun main() {
             val content = readlnOrNull()!!.trim()
             print("작가: ")
             val author = readlnOrNull()!!.trim()
-            println("1번 명언이 등록되었습니다.")
+            val id = ++lastid
+            println("${id}번 명언이 등록되었습니다.")
         }
     }
 }
