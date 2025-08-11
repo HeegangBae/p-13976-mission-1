@@ -121,6 +121,24 @@ fun main() {
                     println("${id}번 명언은 존재하지 않습니다.")
                 }
             }
+            "빌드" -> {
+                val wiseSayingFiles = dbDir.listFiles { file ->
+                    file.name.endsWith(".json")
+                } ?: emptyArray()
+
+                // 각 파일의 내용을 읽어와 JSON 배열의 요소로 만듭니다.
+                val jsonContents = wiseSayingFiles.map { file ->
+                    file.readText()
+                }
+
+                // 모든 JSON 문자열을 쉼표로 구분하고 대괄호로 감싸 JSON 배열을 만듭니다.
+                val finalJson = "[\n${jsonContents.joinToString(",\n")}\n]"
+
+                // data.json 파일에 최종 JSON을 씁니다.
+                File("db/data.json").writeText(finalJson)
+
+                println("data.json 파일의 내용이 갱신되었습니다.")
+            }
         }
     }
 }
