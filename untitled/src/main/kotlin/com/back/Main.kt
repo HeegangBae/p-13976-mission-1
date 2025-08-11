@@ -1,10 +1,24 @@
 import com.back.WiseSaying
 import com.back.Rq
+import java.io.File
 
 fun main() {
     println("== 명언 앱 ==")
-    var lastid = 0
-    val wiseSayings = mutableListOf<WiseSaying>()
+
+    val dbPath = "db/wiseSaying"
+    val dbDir = File(dbPath)
+
+    if (!dbDir.exists()) {
+        dbDir.mkdirs()
+    }
+
+    val lastIdFile = File("$dbPath/lastId.txt")
+
+    var lastId = if (lastIdFile.exists()) {
+        lastIdFile.readText().toInt()
+    } else {
+        0
+    }
 
     while(true){
         print("명령) ")
@@ -13,6 +27,7 @@ fun main() {
 
         when(rq.command) {
             "종료" -> {
+                lastIdFile.writeText(lastId.toString())
                 println("종료합니다.")
                 break
             }
@@ -21,17 +36,39 @@ fun main() {
                 val content = readlnOrNull()!!.trim()
                 print("작가: ")
                 val author = readlnOrNull()!!.trim()
-                val id = ++lastid
-                wiseSayings.add(WiseSaying(id, content, author))
+                val id = ++lastId
+
+                val wiseSaying = WiseSaying(id, content, author)
+
+                val jsonContent = """
+                {
+                  "id": $id,
+                  "content": "$content",
+                  "author": "$author"
+                }
+                """.trimIndent()
+
+                File("$dbPath/$id.json").writeText(jsonContent)
+
                 println("${id}번 명언이 등록되었습니다.")
             }
             "목록" -> {
-                if(wiseSayings.isEmpty()){
+                val wiseSayings = dbDir.listFiles { file ->
+                    file.name.endsWith(".json")
+                }?.sortedByDescending { it.nameWithoutExtension.toInt() }?.map { file ->
+                    val content = file.readText()
+                    val id = content.substringAfter("\"id\": ").substringBefore(",").trim().toInt()
+                    val wiseContent = content.substringAfter("\"content\": \"").substringBefore("\"").trim()
+                    val author = content.substringAfter("\"author\": \"").substringBefore("\"").trim()
+                    WiseSaying(id, wiseContent, author)
+                } ?: emptyList()
+
+                if (wiseSayings.isEmpty()) {
                     println("등록된 명언이 없습니다.")
                 } else {
                     println("번호 / 작가 / 명언")
                     println("----------------------")
-                    for(wiseSaying in wiseSayings.reversed()){
+                    for(wiseSaying in wiseSayings){
                         println("${wiseSaying.id} / ${wiseSaying.author} / ${wiseSaying.content}")
                     }
                 }
@@ -42,9 +79,9 @@ fun main() {
                     println("삭제?id=[번호] 와 같이 입력해주세요.")
                     continue
                 }
-                val wiseSayingToRemove = wiseSayings.find { it.id == id }
-                if (wiseSayingToRemove != null) {
-                    wiseSayings.remove(wiseSayingToRemove)
+                val fileToDelete = File("$dbPath/$id.json")
+                if (fileToDelete.exists()) {
+                    fileToDelete.delete()
                     println("${id}번 명언이 삭제되었습니다.")
                 } else {
                     println("${id}번 명언은 존재하지 않습니다.")
@@ -56,21 +93,31 @@ fun main() {
                     println("수정?id=[번호] 와 같이 입력해주세요.")
                     continue
                 }
+                val fileToModify = File("$dbPath/$id.json")
+                if (fileToModify.exists()) {
+                    val existingContent = fileToModify.readText()
+                    val existingAuthor = existingContent.substringAfter("\"author\": \"").substringBefore("\"").trim()
+                    val existingWise = existingContent.substringAfter("\"content\": \"").substringBefore("\"").trim()
 
-                val wiseSayingToModify = wiseSayings.find { it.id == id }
-
-                if (wiseSayingToModify != null) {
-                    println("명언(기존) : ${wiseSayingToModify.content}")
+                    println("명언(기존) : $existingWise")
                     print("명언 : ")
-                    wiseSayingToModify.content = readlnOrNull()!!.trim()
+                    val newContent = readlnOrNull()!!.trim()
 
-                    println("작가(기존) : ${wiseSayingToModify.author}")
+                    println("작가(기존) : $existingAuthor")
                     print("작가 : ")
-                    wiseSayingToModify.author = readlnOrNull()!!.trim()
+                    val newAuthor = readlnOrNull()!!.trim()
 
+                    val updatedJson = """
+                    {
+                      "id": $id,
+                      "content": "$newContent",
+                      "author": "$newAuthor"
+                    }
+                    """.trimIndent()
+
+                    fileToModify.writeText(updatedJson)
                     println("${id}번 명언이 수정되었습니다.")
                 } else {
-                    // 명언이 존재하지 않을 경우 메시지 출력
                     println("${id}번 명언은 존재하지 않습니다.")
                 }
             }
