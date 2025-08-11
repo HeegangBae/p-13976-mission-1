@@ -9,7 +9,6 @@ fun main() {
     while(true){
         print("명령) ")
         val input = readlnOrNull()!!.trim()
-
         val rq = Rq.of(input)
 
         when(rq.command) {
@@ -29,7 +28,7 @@ fun main() {
             "목록" -> {
                 if(wiseSayings.isEmpty()){
                     println("등록된 명언이 없습니다.")
-                }else{
+                } else {
                     println("번호 / 작가 / 명언")
                     println("----------------------")
                     for(wiseSaying in wiseSayings.reversed()){
@@ -39,17 +38,39 @@ fun main() {
             }
             "삭제" -> {
                 val id = rq.getIntParam("id", -1)
-
                 if (id == -1) {
                     println("삭제?id=[번호] 와 같이 입력해주세요.")
                     continue
                 }
-
                 val wiseSayingToRemove = wiseSayings.find { it.id == id }
                 if (wiseSayingToRemove != null) {
                     wiseSayings.remove(wiseSayingToRemove)
                     println("${id}번 명언이 삭제되었습니다.")
                 } else {
+                    println("${id}번 명언은 존재하지 않습니다.")
+                }
+            }
+            "수정" -> {
+                val id = rq.getIntParam("id", -1)
+                if (id == -1) {
+                    println("수정?id=[번호] 와 같이 입력해주세요.")
+                    continue
+                }
+
+                val wiseSayingToModify = wiseSayings.find { it.id == id }
+
+                if (wiseSayingToModify != null) {
+                    println("명언(기존) : ${wiseSayingToModify.content}")
+                    print("명언 : ")
+                    wiseSayingToModify.content = readlnOrNull()!!.trim()
+
+                    println("작가(기존) : ${wiseSayingToModify.author}")
+                    print("작가 : ")
+                    wiseSayingToModify.author = readlnOrNull()!!.trim()
+
+                    println("${id}번 명언이 수정되었습니다.")
+                } else {
+                    // 명언이 존재하지 않을 경우 메시지 출력
                     println("${id}번 명언은 존재하지 않습니다.")
                 }
             }
