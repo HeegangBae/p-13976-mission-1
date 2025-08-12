@@ -6,6 +6,10 @@ import java.util.Scanner
 
 class WiseSayingController(private val wiseSayingService: WiseSayingService) {
 
+    fun write(content: String, author: String): Int {
+        return wiseSayingService.write(content, author)
+    }
+
     fun write(scanner: Scanner) {
         print("명언 : ")
         val content = scanner.nextLine().trim()
@@ -16,18 +20,93 @@ class WiseSayingController(private val wiseSayingService: WiseSayingService) {
         println("${id}번 명언이 등록되었습니다.")
     }
 
-    fun list() {
+    fun list(rq: Rq) {
         val wiseSayings = wiseSayingService.findAll()
         if (wiseSayings.isEmpty()) {
             println("등록된 명언이 없습니다.")
             return
         }
 
+        val page = rq.getIntParam("page", 1)
+        val pageSize = 5 // 페이지당 명언 개수
+        val totalCount = wiseSayings.size
+        val totalPages = (totalCount + pageSize - 1) / pageSize
+
+        val startIndex = (page - 1) * pageSize
+        val endIndex = (startIndex + pageSize).coerceAtMost(totalCount)
+
+        val pagedWiseSayings = wiseSayings.subList(startIndex, endIndex)
+
         println("번호 / 작가 / 명언")
         println("----------------------")
-        wiseSayings.forEach { wiseSaying ->
+        pagedWiseSayings.forEach { wiseSaying ->
             println("${wiseSaying.id} / ${wiseSaying.author} / ${wiseSaying.content}")
         }
+        println("----------------------")
+
+        // 페이지 네비게이션 출력
+        print("페이지 : ")
+        for (i in 1..totalPages) {
+            if (i == page) {
+                print("[$i] ")
+            } else {
+                print("$i ")
+            }
+        }
+        println()
+    }
+
+    fun search(rq: Rq) {
+        val keywordType = rq.getStringParam("keywordType", "")
+        val keyword = rq.getStringParam("keyword", "")
+
+        val allWiseSayings = wiseSayingService.findAll()
+
+        val filteredWiseSayings = allWiseSayings.filter {
+            when (keywordType) {
+                "content" -> it.content.contains(keyword)
+                "author" -> it.author.contains(keyword)
+                else -> false
+            }
+        }
+
+        if (filteredWiseSayings.isEmpty()) {
+            println("검색 결과가 없습니다.")
+            return
+        }
+
+        // 페이지 파라미터 가져오기 (기본값 1)
+        val page = rq.getIntParam("page", 1)
+        val pageSize = 5 // 페이지당 명언 개수
+        val totalCount = filteredWiseSayings.size
+        val totalPages = (totalCount + pageSize - 1) / pageSize
+
+        val startIndex = (page - 1) * pageSize
+        val endIndex = (startIndex + pageSize).coerceAtMost(totalCount)
+
+        val pagedWiseSayings = filteredWiseSayings.subList(startIndex, endIndex)
+
+        println("----------------------")
+        println("검색타입 : ${keywordType}")
+        println("검색어 : ${keyword}")
+        println("----------------------")
+        println("번호 / 작가 / 명언")
+        println("----------------------")
+        pagedWiseSayings.forEach { wiseSaying ->
+            println("${wiseSaying.id} / ${wiseSaying.author} / ${wiseSaying.content}")
+        }
+        println("----------------------")
+
+        // 페이지 네비게이션 출력
+        print("페이지 : ")
+        for (i in 1..totalPages) {
+            if (i == page) {
+                print("[$i] ")
+            } else {
+                print("$i ")
+            }
+        }
+        println()
     }
 
     fun remove(rq: Rq) {
@@ -78,39 +157,5 @@ class WiseSayingController(private val wiseSayingService: WiseSayingService) {
     fun build() {
         wiseSayingService.buildDataJson()
         println("data.json 파일의 내용이 갱신되었습니다.")
-    }
-
-    fun search(rq: Rq) {
-        val keywordType = rq.getStringParam("keywordType", "")
-        val keyword = rq.getStringParam("keyword", "")
-
-        // keywordType과 keyword가 없는 경우 전체 목록을 출력합니다.
-        if (keywordType.isBlank() || keyword.isBlank()) {
-            list()
-            return
-        }
-
-        val wiseSayings = wiseSayingService.findAll().filter {
-            when (keywordType) {
-                "content" -> it.content.contains(keyword)
-                "author" -> it.author.contains(keyword)
-                else -> false
-            }
-        }
-
-        if (wiseSayings.isEmpty()) {
-            println("검색 결과가 없습니다.")
-            return
-        }
-
-        println("----------------------")
-        println("검색타입 : ${keywordType}")
-        println("검색어 : ${keyword}")
-        println("----------------------")
-        println("번호 / 작가 / 명언")
-        println("----------------------")
-        wiseSayings.forEach { wiseSaying ->
-            println("${wiseSaying.id} / ${wiseSaying.author} / ${wiseSaying.content}")
-        }
     }
 }

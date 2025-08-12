@@ -10,6 +10,12 @@ class App {
 
     fun run() {
         println("== 명언 앱 ==")
+
+        // 샘플 데이터 10개 생성
+        for (i in 1..10) {
+            wiseSayingController.write(content = "명언 $i", author = "작자미상 $i")
+        }
+
         val scanner = Scanner(System.`in`)
         while (true) {
             print("명령) ")
@@ -26,7 +32,7 @@ class App {
                     if (rq.hasParam("keyword")) {
                         wiseSayingController.search(rq)
                     } else {
-                        wiseSayingController.list()
+                        wiseSayingController.list(rq)
                     }
                 }
                 "삭제" -> wiseSayingController.remove(rq)
