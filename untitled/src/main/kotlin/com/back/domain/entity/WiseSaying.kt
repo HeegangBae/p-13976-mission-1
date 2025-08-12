@@ -1,4 +1,4 @@
-package com.back
+package com.back.domain.entity
 
 data class WiseSaying(
     val id: Int,

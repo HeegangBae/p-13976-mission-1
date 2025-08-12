@@ -1,4 +1,4 @@
-package com.back
+package com.back.global.rq
 
 class Rq(val command: String, val paramMap: Map<String, String>) {
 
