@@ -1,12 +1,15 @@
 package com.back.domain.repository
 
 import com.back.domain.entity.WiseSaying
+import com.back.standard.app.AppConfig
 import com.back.standard.util.JsonParser.jsonToWiseSaying
 import com.back.standard.util.JsonParser.wiseSayingToJson
 import java.io.File
+import java.nio.file.Files
+import java.util.Comparator
 
 class WiseSayingFileRepository : WiseSayingRepository {
-    private val dbPath = "db/wiseSaying"
+    private val dbPath = AppConfig.dbDirPath.toString()
     private val dbDir = File(dbPath).apply { mkdirs() }
     private val lastIdFile = File("$dbPath/lastId.txt")
 
@@ -16,11 +19,19 @@ class WiseSayingFileRepository : WiseSayingRepository {
         0
     }
 
+    private fun ensureDirExists(file: File) {
+        file.parentFile?.mkdirs()
+    }
+
     override fun write(content: String, author: String): Int {
         val id = ++lastId
         val wiseSaying = WiseSaying(id, content, author)
         val jsonContent = wiseSayingToJson(wiseSaying)
-        File("$dbPath/$id.json").writeText(jsonContent)
+
+        val file = File("$dbPath/$id.json")
+        ensureDirExists(file)
+        file.writeText(jsonContent)
+
         return id
     }
 
@@ -64,11 +75,20 @@ class WiseSayingFileRepository : WiseSayingRepository {
             file.readText()
         } ?: emptyList()
 
-        val finalJson = "[\n${jsonContents.joinToString(",\n")}\n]"
+        val finalJson = "[${jsonContents.joinToString(",\n")}]"
         File("db/data.json").writeText(finalJson)
     }
 
     override fun saveLastId() {
+        ensureDirExists(lastIdFile)
         lastIdFile.writeText(lastId.toString())
+    }
+
+    fun clear() {
+        val path = AppConfig.dbDirPath
+        if (Files.exists(path)) {
+            Files.walk(path).sorted(Comparator.reverseOrder()).forEach { Files.delete(it) }
+        }
+        lastId = 0
     }
 }

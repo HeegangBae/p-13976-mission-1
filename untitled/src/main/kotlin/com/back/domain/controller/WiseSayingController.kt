@@ -2,11 +2,11 @@ package com.back.domain.controller
 
 import com.back.global.rq.Rq
 import com.back.domain.service.WiseSayingService
-import com.back.global.bean.SingletonScope.scanner
+import java.util.Scanner
 
 class WiseSayingController(private val wiseSayingService: WiseSayingService) {
 
-    fun write() {
+    fun write(scanner: Scanner) {
         print("명언: ")
         val content = scanner.nextLine().trim()
         print("작가: ")
@@ -45,7 +45,7 @@ class WiseSayingController(private val wiseSayingService: WiseSayingService) {
         }
     }
 
-    fun modify(rq: Rq) {
+    fun modify(rq: Rq, scanner: Scanner) {
         val id = rq.getIntParam("id", -1)
         if (id == -1) {
             println("수정?id=[번호] 와 같이 입력해주세요.")
@@ -70,12 +70,13 @@ class WiseSayingController(private val wiseSayingService: WiseSayingService) {
         println("${id}번 명언이 수정되었습니다.")
     }
 
+    fun exit() {
+        wiseSayingService.saveLastId()
+        wiseSayingService.buildDataJson()
+    }
+
     fun build() {
         wiseSayingService.buildDataJson()
         println("data.json 파일의 내용이 갱신되었습니다.")
-    }
-
-    fun exit() {
-        wiseSayingService.saveLastId()
     }
 }
