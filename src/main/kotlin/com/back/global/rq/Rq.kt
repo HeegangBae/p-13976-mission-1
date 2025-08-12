@@ -24,4 +24,12 @@ class Rq(val command: String, val paramMap: Map<String, String>) {
     fun getIntParam(key: String, defaultValue: Int): Int {
         return paramMap[key]?.toIntOrNull() ?: defaultValue
     }
+
+    fun getStringParam(key: String, defaultValue: String): String {
+        return paramMap[key] ?: defaultValue
+    }
+
+    fun hasParam(key: String): Boolean {
+        return paramMap.containsKey(key)
+    }
 }

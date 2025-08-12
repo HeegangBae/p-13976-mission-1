@@ -79,4 +79,38 @@ class WiseSayingController(private val wiseSayingService: WiseSayingService) {
         wiseSayingService.buildDataJson()
         println("data.json 파일의 내용이 갱신되었습니다.")
     }
+
+    fun search(rq: Rq) {
+        val keywordType = rq.getStringParam("keywordType", "")
+        val keyword = rq.getStringParam("keyword", "")
+
+        // keywordType과 keyword가 없는 경우 전체 목록을 출력합니다.
+        if (keywordType.isBlank() || keyword.isBlank()) {
+            list()
+            return
+        }
+
+        val wiseSayings = wiseSayingService.findAll().filter {
+            when (keywordType) {
+                "content" -> it.content.contains(keyword)
+                "author" -> it.author.contains(keyword)
+                else -> false
+            }
+        }
+
+        if (wiseSayings.isEmpty()) {
+            println("검색 결과가 없습니다.")
+            return
+        }
+
+        println("----------------------")
+        println("검색타입 : ${keywordType}")
+        println("검색어 : ${keyword}")
+        println("----------------------")
+        println("번호 / 작가 / 명언")
+        println("----------------------")
+        wiseSayings.forEach { wiseSaying ->
+            println("${wiseSaying.id} / ${wiseSaying.author} / ${wiseSaying.content}")
+        }
+    }
 }

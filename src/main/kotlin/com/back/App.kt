@@ -22,7 +22,13 @@ class App {
                     break
                 }
                 "등록" -> wiseSayingController.write(scanner)
-                "목록" -> wiseSayingController.list()
+                "목록" -> {
+                    if (rq.hasParam("keyword")) {
+                        wiseSayingController.search(rq)
+                    } else {
+                        wiseSayingController.list()
+                    }
+                }
                 "삭제" -> wiseSayingController.remove(rq)
                 "수정" -> wiseSayingController.modify(rq, scanner)
                 "빌드" -> wiseSayingController.build()
